@@ -11,6 +11,12 @@ export default function SignupScreen() {
     const [confirmPassword, setConfirmPassword] = useState('');
 
     const handleSignup = () => {
+        const cleanEmail = email.trim();
+
+        if (!cleanEmail || !password) {
+            Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+            return;
+        }
         if (password !== confirmPassword) {
             Alert.alert("Erreur", "Les mots de passe ne correspondent pas !");
             return;

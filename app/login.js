@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, TextInput, Alert} from 'react-native';
 import { useRouter, Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
 import { useAuth } from './_layout';
@@ -15,6 +15,12 @@ export default function LoginScreen() {
     }
 
     const handleLogin = () => {
+        const cleanEmail = email.trim();
+
+        if (!cleanEmail) {
+            Alert.alert("Erreur", "Veuillez saisir votre adresse email.");
+            return;
+        }
         // On passe l'email saisi au contexte global
         login({ email: email, name: "Utilisateur" });
 
