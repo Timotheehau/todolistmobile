@@ -1,31 +1,40 @@
-import {View, Text, StyleSheet, TouchableOpacity, TextInput, Alert} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useRouter, Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
-import { useAuth } from './_layout';
+import { useAuth } from './_layout'; // Vérifie bien le chemin vers ton _layout
 import { globalStyles } from '../styles/global';
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
-    const { login, isLoggedIn } = useAuth(); // On récupère l'état réel
+    const [password, setPassword] = useState('');
+    const { login, isLoggedIn } = useAuth();
     const router = useRouter();
 
-    // 1. PROTECTION : Si l'utilisateur est déjà connecté, pas besoin de rester ici
+    // Redirection automatique si déjà connecté
     if (isLoggedIn) {
         return <Redirect href="/" />;
     }
 
     const handleLogin = () => {
-        const cleanEmail = email.trim();
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanPassword = password.trim();
 
-        if (!cleanEmail) {
-            Alert.alert("Erreur", "Veuillez saisir votre adresse email.");
+        // 1. Validation de saisie
+        if (!cleanEmail || !cleanPassword) {
+            Alert.alert("Champs incomplets", "Veuillez remplir tous les champs.");
             return;
         }
-        // On passe l'email saisi au contexte global
-        login({ email: email, name: "Utilisateur" });
 
-        // Redirection vers l'espace privé
-        router.replace('/tasks');
+        // 2. Appel du moteur de login et récupération du résultat
+        const result = login(cleanEmail, cleanPassword);
+
+        if (result.success) {
+            // ✅ Succès : le compte existe, on redirige
+            router.replace('/tasks');
+        } else {
+            // ❌ Échec : on reste ici et on prévient l'utilisateur
+            Alert.alert("Erreur de connexion", result.message);
+        }
     };
 
     return (
@@ -39,19 +48,21 @@ export default function LoginScreen() {
                 <TextInput
                     value={email}
                     onChangeText={setEmail}
-                    style={globalStyles.input} // Style global
+                    style={globalStyles.input}
                     placeholder="Email"
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    autoCorrect={false}
                 />
 
                 <TextInput
-                    style={globalStyles.input} // Style global
+                    value={password}
+                    onChangeText={setPassword}
+                    style={globalStyles.input}
                     placeholder="Mot de passe"
-                    secureTextEntry
+                    secureTextEntry={true}
                 />
 
-                {/* Utilisation de ton style de bouton noir (profileButton) */}
                 <TouchableOpacity
                     style={globalStyles.profileButton}
                     onPress={handleLogin}

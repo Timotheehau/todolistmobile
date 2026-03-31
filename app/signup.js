@@ -1,29 +1,46 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useState } from 'react';
-import { globalStyles, Colors } from '../styles/global'; // On importe aussi Colors pour la cohérence
+import { globalStyles } from '../styles/global';
+import { useAuth } from './_layout'; // 1. IMPORTATION CRUCIALE
 
 export default function SignupScreen() {
     const router = useRouter();
+    const { register } = useAuth(); // 2. RÉCUPÉRATION DE LA FONCTION
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
     const handleSignup = () => {
-        const cleanEmail = email.trim();
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanPassword = password.trim();
 
-        if (!cleanEmail || !password) {
+        // Validation de base
+        if (!cleanEmail || !cleanPassword || !confirmPassword) {
             Alert.alert("Erreur", "Veuillez remplir tous les champs.");
             return;
         }
-        if (password !== confirmPassword) {
+
+        if (cleanPassword !== confirmPassword) {
             Alert.alert("Erreur", "Les mots de passe ne correspondent pas !");
             return;
         }
 
-        console.log("Compte créé pour :", email);
-        router.replace('/login');
+        // 3. ENREGISTREMENT RÉEL DANS LE CONTEXTE
+        const result = register(cleanEmail, cleanPassword);
+
+        if (result.success) {
+            console.log("Compte créé avec succès pour :", cleanEmail);
+            Alert.alert(
+                "Succès",
+                "Votre compte a été créé. Vous pouvez maintenant vous connecter.",
+                [{ text: "OK", onPress: () => router.replace('/login') }]
+            );
+        } else {
+            // Affiche l'erreur si l'email est déjà pris par exemple
+            Alert.alert("Erreur", result.message);
+        }
     };
 
     return (
@@ -35,22 +52,23 @@ export default function SignupScreen() {
                 <Text style={styles.subtitle}>Rejoignez-nous pour gérer vos tâches efficacement</Text>
 
                 <TextInput
-                    style={globalStyles.input} // Utilisation du style global
+                    style={globalStyles.input}
                     placeholder="Email"
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    autoCorrect={false}
                 />
                 <TextInput
-                    style={globalStyles.input} // Utilisation du style global
+                    style={globalStyles.input}
                     placeholder="Mot de passe"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
                 />
                 <TextInput
-                    style={globalStyles.input} // Utilisation du style global
+                    style={globalStyles.input}
                     placeholder="Confirmer le mot de passe"
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
@@ -78,7 +96,7 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
     scrollContainer: {
         flexGrow: 1,
-        backgroundColor: '#03dac6', // Couleur spécifique au Signup pour le différencier
+        backgroundColor: '#03dac6',
         justifyContent: 'center',
         padding: 20,
     },
@@ -110,7 +128,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     loginLink: {
-        color: '#6200ee', // On utilise la couleur primaire de l'app pour le lien
+        color: '#6200ee',
         fontWeight: 'bold',
         textDecorationLine: 'underline',
     },
